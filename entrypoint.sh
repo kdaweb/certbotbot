@@ -9,6 +9,8 @@ FILEEXT="${FILEEXT:-.tar.gz}"
 
 FILEVERSION="${FILEVERSION:--$(date +%Y%m%d)-}"
 
+DEBUGFLAGS="${DEBUGFLAGS:---test-cert --dry-run}"
+
 ls ~/.aws
 
 echo Certbotbot
@@ -42,9 +44,17 @@ certbot register -m "$EMAIL" --agree-tos --no-eff-email --update-registration
 
 echo 5. run certbot
 date > timestamp.txt
-for domain in "$@" ; do
-  certbot -d "$domain" -d "*.${domain}"
-done
+
+if [ $# -eq 0 ] ; then
+  echo "No domains passed -- only renewing existing domains"
+  certbot renew
+else
+  for domain in "$@" ; do
+    echo "Renewing '${domain}' and '*.${domain}'"
+    # shellcheck disable=SC2086
+    certbot certonly --dns-route53 -d "$domain" -d "*.${domain}" $DEBUGFLAGS
+  done
+fi
 
 echo 6. make combined certificates
 
