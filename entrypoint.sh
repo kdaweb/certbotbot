@@ -1,5 +1,24 @@
 #!/bin/sh
 
+
+generate_combined() {
+
+  while [ -n "$1" ] ; do
+    filename="$1"
+    shift
+
+    directory="${filename%/*}/"
+    fullchain="${directory}fullchain.pem"
+    privkey="${directory}privkey.pem"
+    combined="${directory}combined.pem"
+
+    cat "${fullchain}" "${privkey}" > "${combined}"
+
+  done
+
+}
+
+
 WORKDIR="${WORKDIR:-/etc/letsencrypt}"
 BUCKET="${BUCKET:?Error: no bucket set}"
 EMAIL="${EMAIL:?Error: no email address set}"
@@ -8,8 +27,6 @@ FILEBASE="${FILEBASE:-live}"
 FILEEXT="${FILEEXT:-.tar.gz}"
 
 FILEVERSION="${FILEVERSION:--$(date +%Y%m%d)-}"
-
-DEBUGFLAGS="${DEBUGFLAGS:---test-cert --dry-run}"
 
 ls ~/.aws
 
@@ -40,7 +57,11 @@ if [ -e "${FILEBASE}${FILEEXT}" ] ; then
 fi
 
 echo 4. update registration
-certbot register -m "$EMAIL" --agree-tos --no-eff-email --update-registration
+if find /etc/letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/ -name regr.json | grep -q regr.json ; then
+  certbot update_account --email "$EMAIL" --agree-tos --no-eff-email
+else
+  certbot register --email "$EMAIL" --agree-tos --no-eff-email
+fi
 
 echo 5. run certbot
 date > timestamp.txt
@@ -57,6 +78,15 @@ else
 fi
 
 echo 6. make combined certificates
+
+if [ -d "${WORKDIR}/live/" ] ; then
+  find "${WORKDIR}/live/" -name fullchain.pem \
+  | while read -r file ; do \
+    generate_combined "$file" ;
+  done
+else
+  echo "no certificates to combine"
+fi
 
 echo 7. create archive
 tar -czvf "${FILEBASE}${FILEEXT}" .
