@@ -28,8 +28,6 @@ FILEEXT="${FILEEXT:-.tar.gz}"
 
 FILEVERSION="${FILEVERSION:--$(date +%Y%m%d)-}"
 
-ls ~/.aws
-
 echo Certbotbot
 
 echo 1. prep
@@ -47,13 +45,15 @@ echo 2. pull archive
 
 cd "${WORKDIR}" || exit 1
 
-if aws s3 cp "s3://${BUCKET}/${FILEBASE}${FILEEXT}" "${WORKDIR}" > /dev/null 2>&1 /dev/null ; then
+if aws s3 cp "s3://${BUCKET}/${FILEBASE}${FILEEXT}" . > /dev/null 2>&1 /dev/null ; then
   echo "File doesn't exist"
 fi
 
 echo 3. decompress archive
 if [ -e "${FILEBASE}${FILEEXT}" ] ; then
   tar -xzvf "${FILEBASE}${FILEEXT}"
+else
+  echo "archive does not exist."
 fi
 
 echo 4. update registration
