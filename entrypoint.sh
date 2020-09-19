@@ -66,7 +66,7 @@ fi
 echo 5. run certbot
 date > timestamp.txt
 
-if [ $# -eq 0 ] ; then
+if [ $# -eq 0 ] || [ "$1" = "" ] ; then
   echo "No domains passed -- only renewing existing domains"
   certbot renew
 else

@@ -8,7 +8,6 @@ flags="${flags:-}"
 docker run \
   --rm \
   -it \
-  -v "${HOME}/.aws:/root/.aws" \
   -e "BUCKET=${bucket}" \
 	-e "EMAIL=${email}" \
 	-e "DEBUGFLAGS=${flags}" \
