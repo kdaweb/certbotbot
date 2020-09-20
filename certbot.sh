@@ -11,5 +11,6 @@ docker run \
   -e "BUCKET=${bucket}" \
 	-e "EMAIL=${email}" \
 	-e "DEBUGFLAGS=${flags}" \
+  -v "${HOME}/.aws/credentials:/root/.aws/credentials" \
 	"${tag}" \
   "$@"

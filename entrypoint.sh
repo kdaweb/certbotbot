@@ -45,21 +45,27 @@ echo 2. pull archive
 
 cd "${WORKDIR}" || exit 1
 
-if aws s3 cp "s3://${BUCKET}/${FILEBASE}${FILEEXT}" . > /dev/null 2>&1 /dev/null ; then
+if aws s3 cp "s3://${BUCKET}/${FILEBASE}${FILEEXT}" .  ; then
+  echo "File downloaded"
+else
   echo "File doesn't exist"
 fi
 
 echo 3. decompress archive
-if [ -e "${FILEBASE}${FILEEXT}" ] ; then
-  tar -xzvf "${FILEBASE}${FILEEXT}"
+
+if [ -f "${FILEBASE}${FILEEXT}" ] ; then
+  tar -xzf "${FILEBASE}${FILEEXT}"
 else
   echo "archive does not exist."
 fi
 
 echo 4. update registration
-if find /etc/letsencrypt/accounts/acme-v02.api.letsencrypt.org/directory/ -name regr.json | grep -q regr.json ; then
+
+if find" ${WORKDIR}/accounts/acme-v02.api.letsencrypt.org/directory/" -name regr.json | grep -q regr.json ; then
+  echo "updating account"
   certbot update_account --email "$EMAIL" --agree-tos --no-eff-email
 else
+  echo "registering account"
   certbot register --email "$EMAIL" --agree-tos --no-eff-email
 fi
 
@@ -89,7 +95,8 @@ else
 fi
 
 echo 7. create archive
-tar -czvf "${FILEBASE}${FILEEXT}" .
+find live/ -maxdepth 1 -mindepth 1 -type d | sed 's|^live/||'
+tar -czf "${FILEBASE}${FILEEXT}" .
 
 echo 8. push archive
 aws s3 cp "${FILEBASE}${FILEEXT}" "s3://${BUCKET}/${FILEBASE}${FILEEXT}"
