@@ -61,7 +61,7 @@ fi
 
 echo 4. update registration
 
-if find" ${WORKDIR}/accounts/acme-v02.api.letsencrypt.org/directory/" -name regr.json | grep -q regr.json ; then
+if find "accounts/acme-v02.api.letsencrypt.org/directory/" -name regr.json | grep -q regr.json ; then
   echo "updating account"
   certbot update_account --email "$EMAIL" --agree-tos --no-eff-email
 else
@@ -96,7 +96,7 @@ fi
 
 echo 7. create archive
 find live/ -maxdepth 1 -mindepth 1 -type d | sed 's|^live/||'
-tar -czf "${FILEBASE}${FILEEXT}" .
+tar -czf "${FILEBASE}${FILEEXT}" --exclude "${FILEBASE}${FILEEXT}" .
 
 echo 8. push archive
 aws s3 cp "${FILEBASE}${FILEEXT}" "s3://${BUCKET}/${FILEBASE}${FILEEXT}"
