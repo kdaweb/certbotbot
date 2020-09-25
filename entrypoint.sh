@@ -95,7 +95,7 @@ else
 fi
 
 echo 7. create archive
-find live/ -maxdepth 1 -mindepth 1 -type d | sed 's|^live/||'
+find live/ -maxdepth 1 -mindepth 1 -type d | sed 's|^live/||' | sort
 tar -czf "${FILEBASE}${FILEEXT}" --exclude "${FILEBASE}${FILEEXT}" .
 
 echo 8. push archive
