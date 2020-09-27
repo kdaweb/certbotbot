@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-tag="${tag:-certbotbot}"
-bucket="${bucket:-certbotbotbucket}"
+tag="${tag:-kdaweb/certbotbot}"
+bucket="${bucket:-thisismybucket}"
 email="${email?Missing email address}"
 flags="${flags:-}"
 
