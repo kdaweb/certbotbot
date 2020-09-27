@@ -26,7 +26,7 @@ EMAIL="${EMAIL:?Error: no email address set}"
 FILEBASE="${FILEBASE:-live}"
 FILEEXT="${FILEEXT:-.tar.gz}"
 
-FILEVERSION="${FILEVERSION:--$(date +%Y%m%d)-}"
+FILEVERSION="${FILEVERSION:--$(date +%Y%m%d)}"
 
 echo Certbotbot
 
