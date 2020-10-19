@@ -62,8 +62,9 @@ fi
 echo 4. update registration
 
 if find "accounts/acme-v02.api.letsencrypt.org/directory/" -name regr.json | grep -q regr.json ; then
+  # @TODO this is problematic if there are multiple accounts involved
   echo "updating account"
-  certbot update_account --email "$EMAIL" --agree-tos --no-eff-email
+  # certbot update_account --email "$EMAIL" --agree-tos --no-eff-email
 else
   echo "registering account"
   certbot register --email "$EMAIL" --agree-tos --no-eff-email
