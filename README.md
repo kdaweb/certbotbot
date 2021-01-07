@@ -105,3 +105,22 @@ docker run \
   kdaweb/certbotbot
   domain.tld
 ```
+
+## Running certbotbot as a daemon
+
+By default -- and original intent -- the certbotbot was designed to run once,
+fetch certificates, register / renew, create "combined" files, and push a new
+archive back up to the cloud, then exit.  However, there may be times when it
+is desirable to have the certbotbot run repeatedly, such as every X hours.  The
+certbotbot can do that, too.
+
+The certbotbot now uses supervisord to call the script to do the work.  By
+default, it will run once (actually, up to 3 times if the first 2 invocations
+fail), and then terminate.  However, it one sets the `RUNONCE` environment
+variable to 1 (for `false`), then it will run normally, wait for `RUNDELAY`
+seconds, and then run again on a loop.  By default, `RUNDELAY` is `86400`
+(one day).
+
+If the certbotbot is set to run multiple times AND an invocation fails,
+then it will wait `RETRYWAIT` seconds before retrying; be default,
+`RETRYWAIT` is `60` (one minute).
