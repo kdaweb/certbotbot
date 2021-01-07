@@ -124,3 +124,23 @@ seconds, and then run again on a loop.  By default, `RUNDELAY` is `86400`
 If the certbotbot is set to run multiple times AND an invocation fails,
 then it will wait `RETRYWAIT` seconds before retrying; be default,
 `RETRYWAIT` is `60` (one minute).
+
+## Miscellanous Flags
+
+### SKIPUPDATEACCOUNT
+
+If the `SKIPUPDATEACCOUNT` environment variable is 0 (True, the default),
+then if the LetsEncrypt account in question already exists, it won't be
+updated; if set to a non-zero integer (i.e., False), then if the account
+exists, it will be updated.  This can be problematic in some cases, hence
+the default not to update the account.
+
+### UPDATECERTS
+
+If the `UPDATECERTS` environment variable is 0 (True, the default), then
+the certbotbot will attempt to renew the certificates from the archive
+and push the updates back up to the cloud.  If set to a non-zero integer
+(i.e., False), then the certbotbot will pull the archive and will make
+sure the combined certificates are constructed properly, but it will
+neither attempt to renew the certificates nor push anything back to
+the cloud.
