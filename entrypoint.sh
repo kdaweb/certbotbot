@@ -13,7 +13,7 @@ generate_combined() {
     combined="${directory}combined.pem"
 
     cat "${fullchain}" "${privkey}" > "${combined}"
-
+    cat "${fullchain}" "${privkey}" > "/etc/letsencrypt/combined/$(basename "$directory").pem" 
   done
 
 }
