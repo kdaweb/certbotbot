@@ -1,0 +1,28 @@
+---
+name: Publish
+
+# yamllint disable-line rule:truthy
+on:
+  push:
+    branches:
+      - "master"
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  publish_image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 # pin@v3
+
+      - name: Build and Publish Image
+        uses: wesley-dean/publish_container@v0.0.12
+        with:
+          dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+          dockerhub_token: ${{ secrets.DOCKERHUB_PAT }}
+          github_ref: ${{ github.ref }}
+          repository_name: ${{ github.event.repository.name }}
