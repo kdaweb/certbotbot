@@ -24,5 +24,7 @@ jobs:
         with:
           dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
           dockerhub_token: ${{ secrets.DOCKERHUB_PAT }}
+          dockerhub_image: ${{ secrets.DOCKERHUB_IMAGE }}
+          dockerhub_registry: docker.io
           github_ref: ${{ github.ref }}
           repository_name: ${{ github.event.repository.name }}
