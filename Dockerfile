@@ -1,10 +1,13 @@
-FROM certbot/dns-route53:v1.7.0
-
-RUN pip3 install botocore==1.14.7 awscli==1.18.133 aws-mfa==0.0.12
+FROM certbot/dns-route53:v4.0.0
 
 COPY entrypoint.sh /entrypoint.sh
+COPY requirements.txt /requirements.txt
+ENV RUNNER="runner"
 
-# hadolint ignore=DL3002
-USER root
+SHELL ["/bin/ash", "-o", "pipefail", "-c"]
 
+RUN ( getent passwd "${RUNNER}" || adduser -D "${RUNNER}" ) ; pip install --no-cache-dir -r /requirements.txt
+
+USER "${RUNNER}"
 ENTRYPOINT ["/bin/sh", "/entrypoint.sh" ]
+HEALTHCHECK NONE
