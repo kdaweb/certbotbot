@@ -6,20 +6,20 @@
 #
 aws-mfa==0.0.12 \
     --hash=sha256:aef772e38734f1a50e618a2b19a8a69e5f0ced9cbeaf3be5132e9e1ba04fa294
-    # via -r ./requirements.in
-awscli==1.42.32 \
-    --hash=sha256:c6bc74497781eef7d0bf5a34b9f091ee7fcc566010c0f97c812a75873124b165 \
-    --hash=sha256:fb6763badc27d5470d5a4c6f604a38880b493432e58a94f67bc61259e06b6435
-    # via -r ./requirements.in
+    # via -r requirements.in
+awscli==1.42.35 \
+    --hash=sha256:122895d08104d58f879fb1faeb7b7be545ecd9ad82e78e2bbaef250f6f995425 \
+    --hash=sha256:ee96031833fef4519ca674a66a408a64555dec94e54cfcae77a1e416dba5026f
+    # via -r requirements.in
 boto3==1.40.32 \
     --hash=sha256:6951aac75ce25611df55a31c844b118c288460648535ce9125fb15b490387ba4 \
     --hash=sha256:9edf07327f444ddd142f45120c6979902712921b6e90fdb05963996b97bd7689
     # via aws-mfa
-botocore==1.40.32 \
-    --hash=sha256:a7cc409648aaf08a7d1aab76c675818868a0b76745b9deb478f91c1d8898aa8a \
-    --hash=sha256:e027adff8d6e177b396dff68340dafa7548b84aeb2cff149d84844d56ad29bae
+botocore==1.40.35 \
+    --hash=sha256:67e062752ff579c8cc25f30f9c3a84c72d692516a41a9ee1cf17735767ca78be \
+    --hash=sha256:c545de2cbbce161f54ca589fbb677bae14cdbfac7d5f1a27f6a620cb057c26f4
     # via
-    #   -r ./requirements.in
+    #   -r requirements.in
     #   awscli
     #   boto3
     #   s3transfer
