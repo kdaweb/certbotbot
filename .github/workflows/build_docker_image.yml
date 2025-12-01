@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # pin@v3
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # pin@v3
 
       - name: Build and Publish Image
         uses: wesley-dean/publish_container@b2d28ac96e6e46b81e00a58803c643ad64f2236b # pin@v1.0.11
