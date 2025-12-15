@@ -1,4 +1,4 @@
-FROM certbot/dns-route53:v5.2.1
+FROM certbot/dns-route53:v5.2.2
 
 COPY entrypoint.sh /entrypoint.sh
 COPY requirements.txt /requirements.txt
