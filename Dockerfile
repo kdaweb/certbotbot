@@ -1,4 +1,4 @@
-FROM certbot/dns-route53:v5.3.1@sha256:41860a3d1190890d3fcd8edca34addad3736ce67368fe44f57f05a45842f02f6
+FROM certbot/dns-route53:v5.4.0@sha256:bf4ae7177ca8e3cd72569d450e90cbcf04ffafe4f762d05806b5ad79ea387fd1
 COPY entrypoint.sh /entrypoint.sh
 COPY requirements.txt /requirements.txt
 ENV RUNNER="runner"
