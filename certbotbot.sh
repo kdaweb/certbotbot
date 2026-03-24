@@ -5,6 +5,7 @@ set -euo pipefail
 envfile="${envfile:-.env}"
 
 set -a
+# shellcheck disable=SC1090
 [[ -f "$envfile" ]] && source "$envfile"
 set +a
 
