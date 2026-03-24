@@ -36,6 +36,17 @@ The certbotbot takes two required parameters:
 
 By sending a different value for EMAIL, one may update the account associated with the certificates to use the new address.  Therefore, EMAIL is always required, even when not creating a new account.
 
+### Configuring certbotbot
+
+The certbotbot script (which runs the certbotbot container) accepts
+configuration from two sources:
+
+1. environment variable (e.g., `bucket=foobar ./certbotbot.sh`)
+2. an `.env` file that contains the variables to set.  There is a sample
+   `.env` file.  The name of the `.env` file to use may be set with the
+   `envfile` environment variable (e.g., `envfile=env.prod ./certbotbot.sh`)
+
+### Authenticating to AWS
 For authentication purposes, one may:
 
 * **Option 1**: run the certbotbot on an AWS EC2 instance that has access via an IAM Instance Role
