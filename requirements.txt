@@ -7,16 +7,16 @@
 aws-mfa==0.0.12 \
     --hash=sha256:aef772e38734f1a50e618a2b19a8a69e5f0ced9cbeaf3be5132e9e1ba04fa294
     # via -r requirements.in
-awscli==1.44.64 \
-    --hash=sha256:7ab849fcb5d9263e2d067949da73b9e72860423f766db2665c51fdf3dd33b5f9 \
-    --hash=sha256:9264cd799ea99d3af05fe8ae78a9bd6654b0dda8462ecf998c0c69bc6b96f55b
+awscli==1.44.68 \
+    --hash=sha256:27cae29b8a44d30234d28bb07eae5334a79ae749f2a177329d3c63bd129342d1 \
+    --hash=sha256:645a7b4f71e2c4b8068142b2c23ac2ee8c8745abaa9e679a5db53ad71116d28c
     # via -r requirements.in
 boto3==1.42.74 \
     --hash=sha256:4bf89c044d618fe4435af854ab820f09dd43569c0df15d7beb0398f50b9aa970
     # via aws-mfa
-botocore==1.42.74 \
-    --hash=sha256:3a76a8af08b5de82e51a0ae132394e226e15dbf21c8146ac3f7c1f881517a7a7 \
-    --hash=sha256:9cf5cdffc6c90ed87b0fe184676806182588be0d0df9b363e9fe3e2923ac8e80
+botocore==1.42.78 \
+    --hash=sha256:038ab63c7f898e8b5db58cb6a45e4da56c31dd984e7e995839a3540c735564ea \
+    --hash=sha256:61cbd49728e23f68cfd945406ab40044d49abed143362f7ffa4a4f4bd4311791
     # via
     #   -r requirements.in
     #   awscli
