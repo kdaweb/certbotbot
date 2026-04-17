@@ -71,6 +71,10 @@ Moreover, the certificate will be signed for both the value passed to certbotbot
 
 When certbotbot runs, in addition to the `fullchain.pem` and `privkey.pem` files, an additional file named `combined.pem` is generated which includes both the private key as well as the fully-chained certificate. This helps with tools such as HAProxy which look for single files containing both components.
 
+## Deleting Certificate
+
+If you pass `--delete-domain` as the first argument, the next argument can be the domain to delete.  This will delete both the domain name and the wildcard subdomains.  So, if you use `--delete-domain domain.tld` then it will delete certificates for `domain.tld` and `*.domain.tld` together.
+
 ### Archival Storage (S3)
 
 The archives of certificates are stored on AWS S3 at the bucket provided by the `BUCKET` environment variable.
@@ -192,4 +196,18 @@ docker run \
   --env BUCKET=mycertbucket \
   --env EMAIL=user@domain.tld \
   kdaweb/certbotbot domain.tld
+```
+
+### Delete a Certificate
+
+This will delete `domain.tld` and `*.domain.tld`
+
+```shell
+docker run \
+  --rm \
+  --interactive \
+  --tty \
+  --env BUCKET=mycertbucket \
+  --env EMAIL=user@domain.tld \
+  kdaweb/certbotbot --delete-domain domain.tld
 ```

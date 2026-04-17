@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-## @file entrypoint-refactored-functions.sh
+## @file entrypoint.sh
 ## @brief Restore, manage, package, and publish Certbot state from S3-backed storage.
 ## @details
 ## This entrypoint script orchestrates a containerized Certbot workflow that
@@ -31,13 +31,12 @@
 ## The script mutates persistent certificate state stored in S3.  Incorrect
 ## configuration, invalid AWS credentials, or an unintended delete request can
 ## affect the archive that subsequent runs rely upon.
-## @see https://github.com/kdaweb/certbotbot
 ## @par Examples
 ## @code
-## ./entrypoint-refactored-functions.sh
-## ./entrypoint-refactored-functions.sh example.com
-## ./entrypoint-refactored-functions.sh --delete-domain example.com
-## AUTO_CREATE_KMS_KEY_IF_MISSING=true KMS_KEY_ID=alias/certbotbot ./entrypoint-refactored-functions.sh
+## ./entrypoint.sh
+## ./entrypoint.sh example.com
+## ./entrypoint.sh --delete-domain example.com
+## AUTO_CREATE_KMS_KEY_IF_MISSING=true KMS_KEY_ID=alias/certbotbot ./entrypoint.sh
 ## @endcode
 #!/bin/sh
 
@@ -585,6 +584,10 @@ run_certbot_renew() {
 ## It requests a single certificate lineage that covers both the supplied base
 ## domain and the wildcard subdomain pattern `*.domain`.
 ##
+## The explicit `--cert-name "$domain"` argument exists to stabilize the
+## lineage name around the base domain and reduce unexpected suffixed lineage
+## names such as `domain-0001`.
+##
 ## The Route53 plugin selection is hard-coded here.  This function is therefore
 ## the narrowest natural seam for future DNS-provider expansion.
 ## @param domain the base domain to issue or renew
@@ -600,7 +603,7 @@ run_certbot_issue_for_domain() {
   domain="$1"
   log "Renewing '${domain}' and '*.${domain}'"
   # shellcheck disable=SC2086
-  certbot certonly --dns-route53 -d "$domain" -d "*.${domain}" $DEBUGFLAGS
+  certbot certonly --dns-route53 --cert-name "$domain" -d "$domain" -d "*.${domain}" $DEBUGFLAGS
 }
 
 
@@ -666,8 +669,8 @@ run_certbot_work() {
 ## it delegates to `generate_combined()` to create both in-lineage and shared
 ## combined PEM artifacts.
 ##
-## Clearing the shared `combined/` directory first avoids stale combined files
-## remaining after lineage deletion.
+## Clearing the shared `combined/` directory and any in-lineage `combined.pem`
+## files first avoids stale derived files remaining after lineage deletion.
 ## @param WORKDIR= local Certbot state directory that contains `live/` and `combined/`
 ## @retval 0 combined certificate generation completed successfully
 ## @retval non-zero one or more file operations failed
@@ -679,6 +682,7 @@ generate_combined_certificates() {
   log "6. make combined certificates"
 
   find "${WORKDIR}/combined" -type f -name '*.pem' -delete 2>/dev/null || true
+  find "${WORKDIR}/live" -type f -name 'combined.pem' -delete 2>/dev/null || true
 
   if [ -d "${WORKDIR}/live/" ] ; then
     find "${WORKDIR}/live/" -name fullchain.pem \
