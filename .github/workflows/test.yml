@@ -26,9 +26,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install dependencies
+        if: ${{ hashFiles('Makefile') != '' }}
         run: |
           sudo apt-get update
           sudo apt-get install -y make bats
 
       - name: Run tests
+        if: ${{ hashFiles('Makefile') != '' }}
         run: make test
