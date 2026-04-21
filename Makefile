@@ -1,18 +1,9 @@
+IMAGE ?= kdaweb/certbotbot
 
-tag := "certbotbot"
-bucket := "certbotbotbucket"
+.PHONY: test image
 
-flags := "--test-cert --dry-run"
+test:
+	bats tests
 
-image: Dockerfile entrypoint.sh
-	docker build -t $(tag) .
-
-all: image
-	docker run \
-	--rm \
-	-it \
-	-v ${HOME}/.aws:/root/.aws \
-	-e BUCKET=$(bucket) \
-	-e EMAIL=$(email) \
-	-e DEBUGFLAGS=$(flags) \
-	$(tag)
+image:
+	docker build -t "$(IMAGE)" .
