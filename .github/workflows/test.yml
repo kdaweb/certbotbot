@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  content: read
+  contents: read
 
 # If action is already running, cancel the previous run
 concurrency:
