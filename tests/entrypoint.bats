@@ -109,14 +109,14 @@ example.org" ]
 }
 
 
-@test "delete_generated_artifacts_for_domain removes only exact derived PEM artifacts" {
+@test "delete_generated_artifacts_for_lineage removes only exact derived PEM artifacts" {
   mkdir -p "${WORKDIR}/live/example.com" "${WORKDIR}/live/example.com-0001"
   : > "${WORKDIR}/live/example.com/combined.pem"
   : > "${WORKDIR}/live/example.com-0001/combined.pem"
   : > "${WORKDIR}/combined/example.com.pem"
   : > "${WORKDIR}/combined/example.com-0001.pem"
 
-  delete_generated_artifacts_for_domain "example.com"
+  delete_generated_artifacts_for_lineage "example.com"
 
   [ ! -e "${WORKDIR}/live/example.com/combined.pem" ]
   [ ! -e "${WORKDIR}/combined/example.com.pem" ]
@@ -161,7 +161,23 @@ example.org" ]
 }
 
 
-@test "delete_certbot_domain invokes certbot delete and then removes leftovers" {
+@test "list_certbot_lineages_for_domain finds archive-only and suffixed lineages" {
+  mkdir -p "${WORKDIR}/archive/example.com-0001"
+  : > "${WORKDIR}/renewal/example.com-0002.conf"
+  : > "${WORKDIR}/combined/example.com-0003.pem"
+  mkdir -p "${WORKDIR}/archive/example.com-backup"
+
+  run list_certbot_lineages_for_domain "example.com"
+
+  [ "${status}" -eq 0 ]
+  [ "${output}" = "example.com
+example.com-0001
+example.com-0002
+example.com-0003" ]
+}
+
+
+@test "delete_certbot_domain asks certbot to delete every discovered lineage" {
   STUB_BIN="${TEST_ROOT}/bin"
   CERTBOT_LOG="${TEST_ROOT}/certbot.log"
   mkdir -p "${STUB_BIN}"
@@ -177,18 +193,50 @@ EOF_CERTBOT
 
   make_lineage_tree "example.com"
   make_lineage_tree "example.com-0001"
+  make_lineage_tree "example.com-0002"
 
   delete_certbot_domain "example.com"
 
   run cat "${CERTBOT_LOG}"
   [ "${status}" -eq 0 ]
-  [ "${output}" = "delete --cert-name example.com --non-interactive" ]
+  [ "${output}" = "delete --cert-name example.com --non-interactive
+delete --cert-name example.com-0001 --non-interactive
+delete --cert-name example.com-0002 --non-interactive" ]
 
   [ ! -e "${WORKDIR}/live/example.com" ]
   [ ! -e "${WORKDIR}/archive/example.com" ]
   [ ! -e "${WORKDIR}/renewal/example.com.conf" ]
   [ ! -e "${WORKDIR}/combined/example.com.pem" ]
 
+  [ ! -e "${WORKDIR}/live/example.com-0001" ]
+  [ ! -e "${WORKDIR}/archive/example.com-0001" ]
+  [ ! -e "${WORKDIR}/renewal/example.com-0001.conf" ]
+  [ ! -e "${WORKDIR}/combined/example.com-0001.pem" ]
+
+  [ ! -e "${WORKDIR}/live/example.com-0002" ]
+  [ ! -e "${WORKDIR}/archive/example.com-0002" ]
+  [ ! -e "${WORKDIR}/renewal/example.com-0002.conf" ]
+  [ ! -e "${WORKDIR}/combined/example.com-0002.pem" ]
+}
+
+
+@test "delete_certbot_domain falls back when certbot cannot delete a lineage" {
+  STUB_BIN="${TEST_ROOT}/bin"
+  mkdir -p "${STUB_BIN}"
+  export PATH="${STUB_BIN}:${PATH}"
+
+  cat > "${STUB_BIN}/certbot" <<'EOF_CERTBOT'
+#!/bin/sh
+exit 1
+EOF_CERTBOT
+  chmod +x "${STUB_BIN}/certbot"
+
+  make_lineage_tree "example.com-0001"
+
+  run delete_certbot_domain "example.com"
+
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"applying verified filesystem cleanup"* ]]
   [ ! -e "${WORKDIR}/live/example.com-0001" ]
   [ ! -e "${WORKDIR}/archive/example.com-0001" ]
   [ ! -e "${WORKDIR}/renewal/example.com-0001.conf" ]

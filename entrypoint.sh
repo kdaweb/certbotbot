@@ -512,102 +512,191 @@ ensure_certbot_account() {
 }
 
 
-## @fn delete_generated_artifacts_for_domain()
-## @brief Remove derived PEM artifacts for one certificate lineage before deletion.
+## @fn list_certbot_lineages_for_domain()
+## @brief List exact and four-digit-suffixed lineages for one base domain.
 ## @details
-## This helper removes Certbotbot-generated PEM outputs for the exact lineage
-## named by the supplied base domain before `certbot delete` runs.  The goal is
-## to avoid a generated `combined.pem` or shared combined artifact preventing
-## Certbot from removing an otherwise-empty lineage directory.
+## This helper inventories Certbot state before deletion so each matching
+## lineage can be passed to `certbot delete` by its actual certificate name.
+## It considers the standard `live/`, `archive/`, `renewal/`, and `combined/`
+## locations and always includes the requested base-domain name.
 ##
-## The cleanup performed here is intentionally narrow.  It targets only the
-## exact base-domain lineage name and does not attempt to remove suffixed
-## Certbot artifacts such as `domain-0001`.  Those broader leftovers are
-## handled later by `delete_certbot_leftovers_for_domain()` after Certbot has
-## had an opportunity to perform its own lineage-aware cleanup.
-## @param domain the base-domain certificate lineage name to prepare for deletion
-## @retval 0 derived artifacts removed successfully or did not exist
-## @retval non-zero one or more file deletions failed unexpectedly
+## Results are written one lineage name per line, sorted uniquely.  Matching is
+## intentionally limited to the exact base domain and the Certbot-style
+## `domain-NNNN` form so unrelated backup names are not included.
+## @param domain the requested base domain whose lineages should be listed
+## @returns matching lineage names, one per line, on standard output
+## @retval 0 lineage discovery completed successfully
 ## @par Examples
 ## @code
-## delete_generated_artifacts_for_domain "example.com"
+## list_certbot_lineages_for_domain "example.com"
 ## @endcode
-delete_generated_artifacts_for_domain() {
+list_certbot_lineages_for_domain() {
   domain="$1"
 
-  rm -f "${WORKDIR}/live/${domain}/combined.pem"
-  rm -f "${WORKDIR}/combined/${domain}.pem"
+  {
+    printf '%s\n' "${domain}"
+
+    for directory in live archive ; do
+      if [ -d "${WORKDIR}/${directory}" ] ; then
+        find "${WORKDIR}/${directory}" \
+          -mindepth 1 -maxdepth 1 -type d \
+          \( -name "${domain}" \
+          -o -name "${domain}-[0-9][0-9][0-9][0-9]" \) \
+          -exec basename {} \;
+      fi
+    done
+
+    if [ -d "${WORKDIR}/renewal" ] ; then
+      find "${WORKDIR}/renewal" \
+        -mindepth 1 -maxdepth 1 -type f \
+        \( -name "${domain}.conf" \
+        -o -name "${domain}-[0-9][0-9][0-9][0-9].conf" \) \
+        -exec basename {} .conf \;
+    fi
+
+    if [ -d "${WORKDIR}/combined" ] ; then
+      find "${WORKDIR}/combined" \
+        -mindepth 1 -maxdepth 1 -type f \
+        \( -name "${domain}.pem" \
+        -o -name "${domain}-[0-9][0-9][0-9][0-9].pem" \) \
+        -exec basename {} .pem \;
+    fi
+  } | sort -u
+}
+
+
+## @fn certbot_lineage_state_exists()
+## @brief Determine whether Certbot-managed state exists for one lineage.
+## @details
+## This helper checks the three locations that define a Certbot lineage:
+## `live/`, `archive/`, and `renewal/`.  Generated files under `combined/` are
+## excluded because they are Certbotbot artifacts rather than Certbot state.
+## @param lineage the exact Certbot certificate lineage name to inspect
+## @retval 0 at least one Certbot-managed lineage artifact exists
+## @retval 1 no Certbot-managed lineage artifact exists
+## @par Examples
+## @code
+## if certbot_lineage_state_exists "example.com-0001" ; then
+##   log "lineage exists"
+## fi
+## @endcode
+certbot_lineage_state_exists() {
+  lineage="$1"
+
+  [ -e "${WORKDIR}/live/${lineage}" ] ||
+    [ -e "${WORKDIR}/archive/${lineage}" ] ||
+    [ -e "${WORKDIR}/renewal/${lineage}.conf" ]
+}
+
+
+## @fn delete_generated_artifacts_for_lineage()
+## @brief Remove derived PEM artifacts for one exact certificate lineage.
+## @details
+## This helper removes Certbotbot-generated PEM outputs before Certbot is asked
+## to delete the corresponding lineage.  Removing `combined.pem` first prevents
+## that generated file from keeping an otherwise-empty `live/` directory in
+## place during Certbot's own cleanup.
+## @param lineage the exact Certbot certificate lineage name to prepare
+## @retval 0 derived artifacts removed successfully or did not exist
+## @retval non-zero one or more file deletions failed
+## @par Examples
+## @code
+## delete_generated_artifacts_for_lineage "example.com-0001"
+## @endcode
+delete_generated_artifacts_for_lineage() {
+  lineage="$1"
+
+  rm -f "${WORKDIR}/live/${lineage}/combined.pem"
+  rm -f "${WORKDIR}/combined/${lineage}.pem"
 }
 
 
 ## @fn delete_certbot_leftovers_for_domain()
-## @brief Remove exact-match Certbot lineage leftovers after deletion.
+## @brief Remove and verify exact and four-digit-suffixed lineage leftovers.
 ## @details
-## This helper removes local Certbot state that matches either the exact base
-## domain name or the common Certbot suffixed lineage form `domain-NNNN`, where
-## `NNNN` is four digits such as `0001`.  The cleanup spans the standard Certbot
-## state directories used by this script:
+## This helper is the bounded filesystem fallback used after Certbot has been
+## given an opportunity to delete every discovered lineage.  It removes exact
+## paths for each matching lineage from `live/`, `archive/`, `renewal/`, and
+## `combined/`, then verifies that no matching artifacts remain.
 ##
-## - `live/`
-## - `archive/`
-## - `renewal/`
-## - `combined/`
-##
-## The matching is intentionally conservative and uses shell-style pathname
-## patterns rather than regular expressions.  This keeps the removal bounded to
-## the expected Certbot naming scheme and avoids deleting unrelated directories
-## such as ad-hoc backups with longer suffixes.
-## @param domain the base-domain certificate lineage name whose leftovers should be removed
-## @retval 0 leftover cleanup completed successfully or nothing matched
-## @retval non-zero one or more filesystem cleanup operations failed unexpectedly
+## Unlike the earlier best-effort implementation, filesystem errors are not
+## hidden.  An incomplete cleanup is fatal because uploading an archive that
+## still contains certificate material could allow another process to recreate
+## the deleted `live/` lineage from `archive/`.
+## @param domain the base domain whose matching state should be removed
+## @retval 0 all matching artifacts were removed or did not exist
+## @retval 1 one or more matching artifacts remain after cleanup
 ## @par Examples
 ## @code
 ## delete_certbot_leftovers_for_domain "example.com"
 ## @endcode
 delete_certbot_leftovers_for_domain() {
   domain="$1"
+  lineages="$(list_certbot_lineages_for_domain "${domain}")"
 
-  find "${WORKDIR}/live" -mindepth 1 -maxdepth 1 -type d     \( -name "${domain}" -o -name "${domain}-[0-9][0-9][0-9][0-9]" \)     -exec rm -rf {} + 2>/dev/null || true
+  printf '%s\n' "${lineages}" | while IFS= read -r lineage ; do
+    [ -n "${lineage}" ] || continue
 
-  find "${WORKDIR}/archive" -mindepth 1 -maxdepth 1 -type d     \( -name "${domain}" -o -name "${domain}-[0-9][0-9][0-9][0-9]" \)     -exec rm -rf {} + 2>/dev/null || true
+    rm -rf "${WORKDIR}/live/${lineage}"
+    rm -rf "${WORKDIR}/archive/${lineage}"
+    rm -f "${WORKDIR}/renewal/${lineage}.conf"
+    rm -f "${WORKDIR}/combined/${lineage}.pem"
+  done
 
-  find "${WORKDIR}/renewal" -mindepth 1 -maxdepth 1 -type f     \( -name "${domain}.conf" -o -name "${domain}-[0-9][0-9][0-9][0-9].conf" \)     -exec rm -f {} + 2>/dev/null || true
+  remaining="$(list_certbot_lineages_for_domain "${domain}")"
+  printf '%s\n' "${remaining}" | while IFS= read -r lineage ; do
+    [ -n "${lineage}" ] || continue
 
-  find "${WORKDIR}/combined" -mindepth 1 -maxdepth 1 -type f     \( -name "${domain}.pem" -o -name "${domain}-[0-9][0-9][0-9][0-9].pem" \)     -exec rm -f {} + 2>/dev/null || true
+    if [ -e "${WORKDIR}/live/${lineage}" ] ||
+       [ -e "${WORKDIR}/archive/${lineage}" ] ||
+       [ -e "${WORKDIR}/renewal/${lineage}.conf" ] ||
+       [ -e "${WORKDIR}/combined/${lineage}.pem" ] ; then
+      fail "certificate lineage artifacts remain for ${lineage}"
+    fi
+  done
 }
 
 
 ## @fn delete_certbot_domain()
-## @brief Delete a base-domain certificate lineage from local Certbot state.
+## @brief Delete all Certbot lineages associated with one base domain.
 ## @details
-## This helper expresses the tool's base-domain lineage contract: deleting
-## `example.com` is intended to delete the lineage that manages both
-## `example.com` and `*.example.com` when they were issued together.
+## This helper discovers the exact base-domain lineage and any matching
+## `domain-NNNN` lineages before deletion.  Each discovered Certbot-managed
+## lineage is passed to `certbot delete --cert-name` separately so Certbot can
+## remove its own linked state from `live/`, `archive/`, and `renewal/`.
 ##
-## The deletion flow is intentionally two-phased.  First, it removes exact
-## lineage-scoped derived PEM artifacts that Certbotbot generated locally so
-## those files do not prevent Certbot from removing an otherwise-empty lineage
-## directory.  Second, it delegates to `certbot delete --cert-name` so Certbot
-## can perform its normal lineage-aware cleanup.  After that completes, the
-## helper removes any residual exact-match or suffixed Certbot artifacts such as
-## `example.com-0001` that may remain in the local restored state archive.
-## @param domain the base-domain certificate lineage name to delete
-## @retval 0 Certbot deletion and follow-up cleanup completed successfully
-## @retval non-zero Certbot deletion failed
+## A narrowly scoped filesystem fallback runs afterward to handle inconsistent
+## or partially repaired state.  Certbot failures are logged rather than hidden,
+## but the overall operation succeeds only when final verification confirms that
+## no matching state remains to be repackaged and uploaded.
+## @param domain the base domain whose matching lineages should be deleted
+## @retval 0 all matching Certbot and generated artifacts were removed
+## @retval 1 matching artifacts remained after the deletion attempt
 ## @warning
-## The deletion target is the Certbot certificate name.  This helper assumes
-## that the certificate lineage name matches the base domain used during issue
-## mode.
+## This operation removes both the exact lineage and four-digit-suffixed lineage
+## names such as `example.com-0001`.
 ## @par Examples
 ## @code
 ## delete_certbot_domain "example.com"
 ## @endcode
 delete_certbot_domain() {
   domain="$1"
-  log "Deleting certificate lineage for '${domain}' including '${domain}' and '*.${domain}' when managed together"
+  lineages="$(list_certbot_lineages_for_domain "${domain}")"
 
-  delete_generated_artifacts_for_domain "${domain}"
-  certbot delete --cert-name "${domain}" --non-interactive
+  log "Deleting certificate lineages for '${domain}' including matching four-digit suffixes"
+
+  printf '%s\n' "${lineages}" | while IFS= read -r lineage ; do
+    [ -n "${lineage}" ] || continue
+
+    delete_generated_artifacts_for_lineage "${lineage}"
+
+    if certbot_lineage_state_exists "${lineage}" ; then
+      if ! certbot delete --cert-name "${lineage}" --non-interactive ; then
+        log "Certbot could not fully delete '${lineage}'; applying verified filesystem cleanup"
+      fi
+    fi
+  done
+
   delete_certbot_leftovers_for_domain "${domain}"
 }
 
