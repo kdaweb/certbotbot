@@ -7,19 +7,18 @@
 aws-mfa==0.0.12 \
     --hash=sha256:aef772e38734f1a50e618a2b19a8a69e5f0ced9cbeaf3be5132e9e1ba04fa294
     # via -r requirements.in
-awscli==1.44.81 \
-    --hash=sha256:a21464820df1bad204bfad912c65a4618fa7a62c56463f07a1e0e09365a01f50 \
-    --hash=sha256:af9dcec9f23d5220eab39d99b300e358e4ad1e10336ea7679840592d67aae358
+awscli==1.46.0 \
+    --hash=sha256:0aa98754c23c7eff4c7d970cb619670dc9b0214ee451bb3fe88e74e4a9a03a90 \
+    --hash=sha256:5c1bd660bd3f967f5754a2267fb54e81edf379374faa27973671561888d39bf6
     # via -r requirements.in
 boto3==1.42.74 \
     --hash=sha256:4bf89c044d618fe4435af854ab820f09dd43569c0df15d7beb0398f50b9aa970
     # via aws-mfa
-botocore==1.42.91 \
-    --hash=sha256:7a28c3cc6bfab5724ad18899d52402b776a0de7d87fa20c3c5270bcaaf199ce8 \
-    --hash=sha256:d252e27bc454afdbf5ed3dc617aa423f2c855c081e98b7963093399483ecc698
+botocore==1.42.97 \
+    --hash=sha256:5c0bb00e32d16ff6d278cc8c9e10dc3672d9c1d569031635ac3c908a60de8310 \
+    --hash=sha256:77d2c8ce1bc592d3fbd7c01c35836f4a5b0cac2ca03ccdf6ffc60faa16b5fadc
     # via
     #   -r requirements.in
-    #   awscli
     #   boto3
     #   s3transfer
 colorama==0.4.6 \
@@ -34,6 +33,7 @@ jmespath==1.1.0 \
     --hash=sha256:472c87d80f36026ae83c6ddd0f1d05d4e510134ed462851fd5f754c8c3cbb88d \
     --hash=sha256:a5663118de4908c91729bea0acadca56526eb2698e83de10cd116ae0f4e97c64
     # via
+    #   awscli
     #   boto3
     #   botocore
 pyasn1==0.6.4 \
@@ -43,7 +43,9 @@ pyasn1==0.6.4 \
 python-dateutil==2.9.0.post0 \
     --hash=sha256:37dd54208da7e1cd875388217d5e00ebd4179249f90fb72437e91a35459a0ad3 \
     --hash=sha256:a8b2bc7bffae282281c8140a97d3aa9c14da0b136dfe83f850eea9a5f7470427
-    # via botocore
+    # via
+    #   awscli
+    #   botocore
 pyyaml==6.0.3 \
     --hash=sha256:00c4bdeba853cc34e7dd471f16b4114f4162dc03e6b7afcc2128711f0eca823c \
     --hash=sha256:0150219816b6a1fa26fb4699fb7daa9caf09eb1999f3b70fb6e786805e80375a \
@@ -126,9 +128,7 @@ rsa==4.7.2 \
 s3transfer==0.16.0 \
     --hash=sha256:18e25d66fed509e3868dc1572b3f427ff947dd2c56f844a5bf09481ad3f3b2fe \
     --hash=sha256:8e990f13268025792229cd52fa10cb7163744bf56e719e0b9cb925ab79abf920
-    # via
-    #   awscli
-    #   boto3
+    # via boto3
 six==1.17.0 \
     --hash=sha256:4721f391ed90541fddacab5acf947aa0d3dc7d27b2e1e8eda2be8970586c3274 \
     --hash=sha256:ff70335d468e7eb6ec65b95b99d3a2836546063f63acc5171de367e834932a81
@@ -136,4 +136,6 @@ six==1.17.0 \
 urllib3==2.7.0 \
     --hash=sha256:231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c \
     --hash=sha256:9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897
-    # via botocore
+    # via
+    #   awscli
+    #   botocore
